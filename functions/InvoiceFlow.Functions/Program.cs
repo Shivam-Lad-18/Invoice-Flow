@@ -1,0 +1,13 @@
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Hosting;
+
+var host = new HostBuilder()
+    .ConfigureFunctionsWebApplication()
+    .ConfigureServices(services =>
+    {
+        // Application Insights for isolated worker — wired via ApplicationInsights package
+        services.ConfigureFunctionsApplicationInsights();
+    })
+    .Build();
+
+host.Run();

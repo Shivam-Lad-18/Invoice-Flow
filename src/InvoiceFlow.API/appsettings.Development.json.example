@@ -1,0 +1,28 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=YOUR_SERVER;Database=InvoiceFlowDb;User ID=sa;Password=YOUR_PASSWORD;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True;"
+  },
+  "Jwt": {
+    "Secret": "REPLACE-WITH-A-SECRET-AT-LEAST-32-CHARACTERS-LONG",
+    "Issuer": "InvoiceFlow",
+    "Audience": "InvoiceFlow-Client",
+    "AccessTokenExpiryMinutes": 480,
+    "RefreshTokenExpiryDays": 7
+  },
+  "Azure": {
+    "BlobStorage": {
+      "ConnectionString": "UseDevelopmentStorage=true",
+      "ContainerName": "invoices"
+    },
+    "ServiceBus": {
+      "ConnectionString": "",
+      "ExtractionQueueName": "invoice-extraction"
+    }
+  }
+}

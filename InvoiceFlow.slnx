@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/functions/">
+    <Project Path="functions/InvoiceFlow.Functions/InvoiceFlow.Functions.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/InvoiceFlow.API/InvoiceFlow.API.csproj" />
+    <Project Path="src/InvoiceFlow.Application/InvoiceFlow.Application.csproj" />
+    <Project Path="src/InvoiceFlow.Domain/InvoiceFlow.Domain.csproj" />
+    <Project Path="src/InvoiceFlow.Infrastructure/InvoiceFlow.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/InvoiceFlow.IntegrationTests/InvoiceFlow.IntegrationTests.csproj" />
+    <Project Path="tests/InvoiceFlow.UnitTests/InvoiceFlow.UnitTests.csproj" />
+  </Folder>
+</Solution>

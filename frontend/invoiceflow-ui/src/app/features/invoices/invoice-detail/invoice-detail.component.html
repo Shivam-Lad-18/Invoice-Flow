@@ -1,0 +1,371 @@
+<!-- Back + header -->
+<div class="page-header">
+  <a mat-icon-button routerLink="/invoices" matTooltip="Back to invoices">
+    <mat-icon>arrow_back</mat-icon>
+  </a>
+
+  @if (invoice(); as inv) {
+    <div class="header-info">
+      <h1 class="page-title">{{ inv.originalFileName }}</h1>
+      <div class="header-meta">
+        <app-status-badge [value]="inv.status" type="invoice"></app-status-badge>
+        <span class="meta-sep">·</span>
+        <span>{{ inv.vendorName ?? 'Unknown Vendor' }}</span>
+        <span class="meta-sep">·</span>
+        <span>{{ inv.uploadedAt | date:'dd MMM yyyy, HH:mm' }}</span>
+        <span class="meta-sep">·</span>
+        <span>{{ inv.fileSizeBytes | fileSize }}</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button mat-stroked-button (click)="download()" [disabled]="downloadLoading()">
+        @if (downloadLoading()) { <mat-spinner diameter="16" class="inline-spinner"></mat-spinner> }
+        @else { <mat-icon>download</mat-icon> }
+        View / Download
+      </button>
+
+      @if (canSubmit()) {
+        <button mat-raised-button color="primary"
+                (click)="submitForApproval()" [disabled]="actionLoading()">
+          <mat-icon>send</mat-icon> Submit for Approval
+        </button>
+      }
+    </div>
+  }
+</div>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (invoice(); as inv) {
+  <!-- ── Duplicate detected warning ───────────────────────────────────── -->
+  @if (inv.duplicateOfInvoiceId) {
+    <div class="alert alert--error">
+      <mat-icon>content_copy</mat-icon>
+      <div>
+        <strong>Possible Duplicate Invoice</strong>
+        <p>
+          This invoice appears to be a duplicate of
+          <a [routerLink]="['/invoices', inv.duplicateOfInvoiceId]" class="dup-link">
+            {{ inv.duplicateOfFileName ?? 'another invoice' }}
+          </a>.
+          Please review before submitting for approval.
+        </p>
+      </div>
+    </div>
+  }
+
+  <!-- ── Low-confidence warning ─────────────────────────────────────────── -->
+  @if (inv.extractionResult?.hasLowConfidenceFields) {
+    <div class="alert alert--warning">
+      <mat-icon>warning_amber</mat-icon>
+      <span>Some extracted fields have low confidence scores. Please review and correct if needed.</span>
+    </div>
+  }
+
+  <mat-tab-group animationDuration="200ms">
+
+    <!-- ═══ TAB 1: Overview ═══════════════════════════════════════════════ -->
+    <mat-tab label="Overview">
+      <div class="tab-content">
+
+        @if (inv.extractionResult; as er) {
+          <div class="fields-grid">
+            <div class="field-item">
+              <span class="field-label">Invoice Number</span>
+              <span class="field-value">{{ er.invoiceNumber ?? '—' }}</span>
+            </div>
+            <div class="field-item">
+              <span class="field-label">Invoice Date</span>
+              <span class="field-value">{{ er.invoiceDate ? (er.invoiceDate | date:'dd MMM yyyy') : '—' }}</span>
+            </div>
+            <div class="field-item">
+              <span class="field-label">Due Date</span>
+              <span class="field-value">{{ er.dueDate ? (er.dueDate | date:'dd MMM yyyy') : '—' }}</span>
+            </div>
+            <div class="field-item">
+              <span class="field-label">Vendor Name</span>
+              <span class="field-value">{{ er.vendorName ?? '—' }}</span>
+            </div>
+            <div class="field-item">
+              <span class="field-label">Subtotal</span>
+              <span class="field-value">
+                @if (er.subTotal != null) {
+                  <span class="currency-code">{{ displayCurrency() }}</span>{{ er.subTotal | number:'1.2-2' }}
+                } @else { — }
+              </span>
+            </div>
+            <div class="field-item">
+              <span class="field-label">Tax</span>
+              <span class="field-value">
+                @if (er.taxAmount != null) {
+                  <span class="currency-code">{{ displayCurrency() }}</span>{{ er.taxAmount | number:'1.2-2' }}
+                } @else { — }
+              </span>
+            </div>
+            <div class="field-item">
+              <span class="field-label">Total Amount</span>
+              <span class="field-value total-amount">
+                @if (er.totalAmount != null) {
+                  <span class="currency-code">{{ displayCurrency() }}</span>{{ er.totalAmount | number:'1.2-2' }}
+                } @else { — }
+              </span>
+            </div>
+            <div class="field-item">
+              <span class="field-label">Currency</span>
+              <span class="field-value">{{ er.currency ?? '—' }}</span>
+            </div>
+            <div class="field-item">
+              <span class="field-label">Extracted At</span>
+              <span class="field-value">{{ er.extractedAt | date:'dd MMM yyyy, HH:mm' }}</span>
+            </div>
+            <div class="field-item">
+              <span class="field-label">Manually Corrected</span>
+              <span class="field-value">{{ er.isManuallyCorrected ? 'Yes' : 'No' }}</span>
+            </div>
+          </div>
+        } @else {
+          <div class="empty-section">
+            <mat-icon>hourglass_empty</mat-icon>
+            <p>Extraction not yet complete. The AI is processing this invoice.</p>
+          </div>
+        }
+
+        <!-- ── Manual Correction ──────────────────────────────────────── -->
+        @if (canCorrect()) {
+          <mat-divider class="section-divider"></mat-divider>
+
+          <div class="section-header">
+            <h3>Manual Correction</h3>
+            <button mat-stroked-button (click)="toggleCorrectionForm()">
+              <mat-icon>{{ showCorrectionForm() ? 'expand_less' : 'edit' }}</mat-icon>
+              {{ showCorrectionForm() ? 'Cancel' : 'Correct Fields' }}
+            </button>
+          </div>
+
+          @if (showCorrectionForm()) {
+            <form [formGroup]="correctionForm" (ngSubmit)="saveCorrection()" class="correction-form">
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Vendor Name</mat-label>
+                  <input matInput formControlName="vendorName" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Invoice Number</mat-label>
+                  <input matInput formControlName="invoiceNumber" />
+                </mat-form-field>
+              </div>
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Invoice Date</mat-label>
+                  <input matInput type="date" formControlName="invoiceDate" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Due Date</mat-label>
+                  <input matInput type="date" formControlName="dueDate" />
+                </mat-form-field>
+              </div>
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Subtotal</mat-label>
+                  <input matInput type="number" formControlName="subTotal" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Tax Amount</mat-label>
+                  <input matInput type="number" formControlName="taxAmount" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Total Amount</mat-label>
+                  <input matInput type="number" formControlName="totalAmount" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Currency</mat-label>
+                  <input matInput formControlName="currency" placeholder="INR" />
+                </mat-form-field>
+              </div>
+              <div class="form-actions">
+                <button mat-raised-button color="primary" type="submit" [disabled]="actionLoading()">
+                  Save Correction
+                </button>
+              </div>
+            </form>
+          }
+        }
+
+      </div>
+    </mat-tab>
+
+    <!-- ═══ TAB 2: Line Items ════════════════════════════════════════════ -->
+    <mat-tab label="Line Items">
+      <div class="tab-content">
+        @if (inv.extractionResult?.lineItems?.length) {
+          <table mat-table [dataSource]="inv.extractionResult!.lineItems" class="w-full">
+            <ng-container matColumnDef="description">
+              <th mat-header-cell *matHeaderCellDef>Description</th>
+              <td mat-cell *matCellDef="let row">{{ row.description ?? '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="qty">
+              <th mat-header-cell *matHeaderCellDef>Qty</th>
+              <td mat-cell *matCellDef="let row">{{ row.quantity ?? '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="unitPrice">
+              <th mat-header-cell *matHeaderCellDef>Unit Price</th>
+              <td mat-cell *matCellDef="let row">
+                @if (row.unitPrice != null) {
+                  <span class="currency-code">{{ displayCurrency() }}</span>{{ row.unitPrice | number:'1.2-2' }}
+                } @else { — }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="amount">
+              <th mat-header-cell *matHeaderCellDef>Amount</th>
+              <td mat-cell *matCellDef="let row">
+                @if (row.amount != null) {
+                  <span class="currency-code">{{ displayCurrency() }}</span>{{ row.amount | number:'1.2-2' }}
+                } @else { — }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="confidence">
+              <th mat-header-cell *matHeaderCellDef>Confidence</th>
+              <td mat-cell *matCellDef="let row">
+                <span [class]="'conf-badge conf--' + confidenceColor(row.confidence)">
+                  {{ row.confidence | percent:'1.0-0' }}
+                </span>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="lineItemCols"></tr>
+            <tr mat-row *matRowDef="let row; columns: lineItemCols;"></tr>
+          </table>
+        } @else {
+          <div class="empty-section">
+            <mat-icon>list_alt</mat-icon>
+            <p>No line items extracted yet.</p>
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+    <!-- ═══ TAB 3: Approval Workflow ══════════════════════════════════════ -->
+    <mat-tab label="Approval">
+      <div class="tab-content">
+
+        <!-- Approval action panel (Manager / FinanceHead / CFO / Admin) -->
+        @if (canApproveReject()) {
+          <mat-card class="approval-action-card">
+            <mat-card-header>
+              <mat-card-title>Take Action</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Comment (optional for approval)</mat-label>
+                <textarea matInput rows="2"
+                          [value]="approvalComment()"
+                          (input)="approvalComment.set($any($event.target).value)"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Rejection reason (required to reject)</mat-label>
+                <textarea matInput rows="2"
+                          [value]="rejectionReason()"
+                          (input)="rejectionReason.set($any($event.target).value)"></textarea>
+              </mat-form-field>
+              <div class="action-btns">
+                <button mat-raised-button color="primary"
+                        (click)="approve()" [disabled]="actionLoading()">
+                  <mat-icon>check_circle</mat-icon> Approve
+                </button>
+                <button mat-stroked-button color="warn"
+                        (click)="reject()" [disabled]="actionLoading()">
+                  <mat-icon>cancel</mat-icon> Reject
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+
+        <!-- Workflow steps -->
+        @if (inv.approvalWorkflow; as wf) {
+          <div class="workflow-info">
+            <span>Step {{ wf.currentStepNumber }} of {{ wf.totalSteps }}</span>
+            @if (wf.isCompleted) {
+              <span class="completed-badge">Completed {{ wf.completedAt | date:'dd MMM yyyy' }}</span>
+            }
+          </div>
+
+          <div class="steps-list">
+            @for (step of wf.steps; track step.id) {
+              <div class="step-item" [class]="'step--' + stepStatusLabel(step.status).toLowerCase()">
+                <div class="step-number">{{ step.stepNumber }}</div>
+                <div class="step-body">
+                  <div class="step-role">{{ roleLabel(step.requiredRole) }}</div>
+                  <div class="step-status">{{ stepStatusLabel(step.status) }}</div>
+                  @if (step.comment) {
+                    <div class="step-comment">"{{ step.comment }}"</div>
+                  }
+                  @if (step.decidedAt) {
+                    <div class="step-date">{{ step.decidedAt | date:'dd MMM yyyy, HH:mm' }}</div>
+                  }
+                </div>
+                <mat-icon class="step-icon">
+                  @switch (step.status) {
+                    @case (ApprovalStepStatus.Approved)  { check_circle }
+                    @case (ApprovalStepStatus.Rejected)  { cancel }
+                    @case (ApprovalStepStatus.Delegated) { swap_horiz }
+                    @default { pending }
+                  }
+                </mat-icon>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-section">
+            <mat-icon>account_tree</mat-icon>
+            <p>No approval workflow started yet.</p>
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+    <!-- ═══ TAB 4: Audit Trail (Employee+) ════════════════════════════════ -->
+    @if (canViewAudit()) {
+      <mat-tab label="Audit Trail">
+        <div class="tab-content">
+          @if (auditLogs().length > 0) {
+            <table mat-table [dataSource]="auditLogs()" class="w-full">
+              <ng-container matColumnDef="timestamp">
+                <th mat-header-cell *matHeaderCellDef>Time</th>
+                <td mat-cell *matCellDef="let row">{{ row.timestamp | date:'dd MMM yyyy, HH:mm' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="action">
+                <th mat-header-cell *matHeaderCellDef>Action</th>
+                <td mat-cell *matCellDef="let row">
+                  <code class="action-code">{{ row.action }}</code>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="user">
+                <th mat-header-cell *matHeaderCellDef>User ID</th>
+                <td mat-cell *matCellDef="let row">{{ row.userId ?? 'System' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="details">
+                <th mat-header-cell *matHeaderCellDef>Details</th>
+                <td mat-cell *matCellDef="let row">
+                  @if (row.newValue) {
+                    <span class="audit-value">{{ row.newValue }}</span>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="auditCols"></tr>
+              <tr mat-row *matRowDef="let row; columns: auditCols;"></tr>
+            </table>
+          } @else {
+            <div class="empty-section">
+              <mat-icon>history</mat-icon>
+              <p>No audit events recorded yet.</p>
+            </div>
+          }
+        </div>
+      </mat-tab>
+    }
+
+  </mat-tab-group>
+}

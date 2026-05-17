@@ -1,0 +1,54 @@
+.form-card { max-width: 680px; margin: 0 auto; }
+
+.section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #607d8b;
+  margin: 16px 0 8px;
+}
+
+.role-info-box {
+  display: flex;
+  gap: 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+
+  mat-icon { color: #607d8b; margin-top: 2px; flex-shrink: 0; }
+
+  p { margin: 0; font-size: 0.85rem; line-height: 1.6; color: #455a64; }
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+
+  mat-icon { flex-shrink: 0; margin-top: 2px; }
+
+  &--info { background: #e3f2fd; color: #1565c0; mat-icon { color: #1565c0; } }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.section-divider { margin: 20px 0 12px; }
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.w-full { width: 100%; }

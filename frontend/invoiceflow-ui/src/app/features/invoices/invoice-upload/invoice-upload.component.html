@@ -1,0 +1,87 @@
+<div class="page-header">
+  <h1 class="page-title">Upload Invoice</h1>
+</div>
+
+<mat-card class="upload-card">
+  <mat-card-content>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <!-- ── Vendor selector (hidden for Vendor role — auto-filled from their account) -->
+      @if (!auth.isVendor()) {
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Vendor</mat-label>
+          <mat-select formControlName="vendorId">
+            @for (v of vendors(); track v.id) {
+              <mat-option [value]="v.id">{{ v.name }}</mat-option>
+            }
+          </mat-select>
+          @if (form.get('vendorId')?.hasError('required') && form.get('vendorId')?.touched) {
+            <mat-error>Please select a vendor</mat-error>
+          }
+        </mat-form-field>
+      }
+
+      <!-- ── Drop zone ─────────────────────────────────────────────────── -->
+      <div
+        class="drop-zone"
+        [class.drag-over]="dragOver()"
+        [class.has-file]="selectedFile() !== null"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave()"
+        (drop)="onDrop($event)">
+
+        @if (selectedFile(); as file) {
+          <!-- File selected state -->
+          <div class="file-preview">
+            <mat-icon class="file-type-icon">
+              {{ file.type === 'application/pdf' ? 'picture_as_pdf' : 'image' }}
+            </mat-icon>
+            <div class="file-info">
+              <strong>{{ file.name }}</strong>
+              <span>{{ file.size | fileSize }}</span>
+            </div>
+            <button mat-icon-button type="button" (click)="clearFile()" class="remove-btn">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        } @else {
+          <!-- Empty drop zone -->
+          <mat-icon class="drop-icon">cloud_upload</mat-icon>
+          <p class="drop-text">Drag &amp; drop your invoice here</p>
+          <p class="drop-sub">or</p>
+          <label class="browse-btn">
+            <input type="file" hidden accept=".pdf,.jpg,.jpeg,.png,.tiff,.tif"
+                   (change)="onFileSelected($event)" />
+            <span mat-raised-button color="accent">Browse Files</span>
+          </label>
+          <p class="drop-hint">PDF, JPEG, PNG, TIFF · Max 20 MB</p>
+        }
+      </div>
+
+      @if (fileError()) {
+        <div class="field-error">
+          <mat-icon>error_outline</mat-icon>
+          {{ fileError() }}
+        </div>
+      }
+
+      <!-- ── Upload progress ───────────────────────────────────────────── -->
+      @if (uploading()) {
+        <mat-progress-bar mode="indeterminate" class="upload-progress"></mat-progress-bar>
+        <p class="uploading-text">Uploading and queuing for AI extraction…</p>
+      }
+
+      <!-- ── Actions ───────────────────────────────────────────────────── -->
+      <div class="form-actions">
+        <button mat-stroked-button type="button" routerLink="/invoices" [disabled]="uploading()">
+          Cancel
+        </button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="uploading()">
+          <mat-icon>upload</mat-icon>
+          Upload Invoice
+        </button>
+      </div>
+
+    </form>
+  </mat-card-content>
+</mat-card>

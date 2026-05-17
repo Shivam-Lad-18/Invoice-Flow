@@ -1,0 +1,47 @@
+/* Google Fonts — loaded via index.html */
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f5f7fa;
+  color: #263238;
+}
+
+/* ── Snackbar colours ─────────────────────────────────────────────────────── */
+
+.snack-success .mdc-snackbar__surface {
+  background-color: #2e7d32 !important;
+}
+
+.snack-error .mdc-snackbar__surface {
+  background-color: #c62828 !important;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cfd8dc; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #90a4ae; }
+
+/* ── Currency display ──────────────────────────────────────────────────────── */
+
+.amount-cell { display: inline-flex; align-items: baseline; gap: 3px; }
+
+.currency-code {
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #607d8b;
+  text-transform: uppercase;
+  margin-right: 2px;
+}
+
+
+.mat-mdc-table { background: transparent; }
+
+.mat-mdc-card { box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important; }

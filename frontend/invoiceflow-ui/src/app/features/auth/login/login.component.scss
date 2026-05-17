@@ -1,0 +1,87 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+  padding: 16px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  padding: 8px;
+}
+
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+
+  .brand-icon {
+    color: #1976d2;
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .brand-name {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1976d2;
+    letter-spacing: -0.5px;
+  }
+}
+
+.brand-tagline {
+  color: #78909c;
+  font-size: 13px;
+  margin: 0;
+  text-align: center;
+}
+
+mat-card-content {
+  padding: 8px 16px 16px !important;
+}
+
+.w-full {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 12px;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.login-btn {
+  height: 44px;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+
+  .btn-spinner {
+    display: inline-block;
+    margin-right: 8px;
+    ::ng-deep circle { stroke: #fff; }
+  }
+}

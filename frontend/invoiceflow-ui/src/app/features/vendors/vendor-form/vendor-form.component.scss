@@ -1,0 +1,6 @@
+.page-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.page-title { font-size: 22px; font-weight: 600; margin: 0; }
+.form-card { max-width: 500px; border-radius: 10px !important; mat-card-content { padding: 24px !important; } }
+.w-full { width: 100%; margin-bottom: 4px; }
+.actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 12px; }
+.btn-spinner { display: inline-block; margin-right: 8px; }

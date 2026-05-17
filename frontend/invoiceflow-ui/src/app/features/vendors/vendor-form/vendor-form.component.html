@@ -1,0 +1,41 @@
+<div class="page-header">
+  <a mat-icon-button routerLink="/vendors"><mat-icon>arrow_back</mat-icon></a>
+  <h1 class="page-title">Add New Vendor</h1>
+</div>
+
+<mat-card class="form-card">
+  <mat-card-content>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Company Name</mat-label>
+        <input matInput formControlName="name" />
+        @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+          <mat-error>Name is required</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" />
+        @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
+          <mat-error>Email is required</mat-error>
+        } @else if (form.get('email')?.hasError('email')) {
+          <mat-error>Enter a valid email</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Tax ID / GSTIN (optional)</mat-label>
+        <input matInput formControlName="taxId" />
+      </mat-form-field>
+
+      <div class="actions">
+        <button mat-stroked-button type="button" routerLink="/vendors" [disabled]="saving()">Cancel</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
+          @if (saving()) { <mat-spinner diameter="18" class="btn-spinner"></mat-spinner> }
+          Create Vendor
+        </button>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

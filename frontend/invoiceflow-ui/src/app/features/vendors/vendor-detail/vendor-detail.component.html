@@ -1,0 +1,74 @@
+<div class="page-header">
+  <a mat-icon-button routerLink="/vendors">
+    <mat-icon>arrow_back</mat-icon>
+  </a>
+  <h1 class="page-title">Vendor Detail</h1>
+</div>
+
+@if (loading()) { <mat-progress-bar mode="indeterminate"></mat-progress-bar> }
+
+@if (vendor(); as v) {
+  <mat-card class="detail-card">
+    <mat-card-header>
+      <div mat-card-avatar class="vendor-avatar">
+        <mat-icon>business</mat-icon>
+      </div>
+      <mat-card-title>{{ v.name }}</mat-card-title>
+      <mat-card-subtitle>{{ v.email }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="fields-grid">
+        <div class="field-item">
+          <span class="label">Status</span>
+          <app-status-badge [value]="v.status" type="vendor"></app-status-badge>
+        </div>
+        <div class="field-item">
+          <span class="label">Tax ID</span>
+          <span>{{ v.taxId ?? '—' }}</span>
+        </div>
+        <div class="field-item">
+          <span class="label">Total Invoices</span>
+          <span>{{ v.invoiceCount }}</span>
+        </div>
+        <div class="field-item">
+          <span class="label">Registered</span>
+          <span>{{ v.registeredAt | date:'dd MMM yyyy' }}</span>
+        </div>
+        <div class="field-item">
+          <span class="label">Registered By (User ID)</span>
+          <span class="mono">{{ v.registeredByUserId }}</span>
+        </div>
+        @if (v.userAccountId) {
+          <div class="field-item">
+            <span class="label">Linked Account ID</span>
+            <span class="mono">{{ v.userAccountId }}</span>
+          </div>
+        }
+      </div>
+    </mat-card-content>
+
+    @if (auth.isAdmin()) {
+      <mat-divider></mat-divider>
+      <mat-card-actions>
+        <a mat-stroked-button [routerLink]="['/vendors', v.id, 'edit']">
+          <mat-icon>edit</mat-icon> Edit Details
+        </a>
+
+        <div class="status-changer">
+          <span class="status-label">Change Status:</span>
+          @for (opt of statusOptions; track opt.value) {
+            @if (opt.value !== v.status) {
+              <button mat-stroked-button
+                      [color]="opt.value === 2 ? 'warn' : 'primary'"
+                      [disabled]="statusUpdating()"
+                      (click)="onStatusChange(opt.value)">
+                {{ opt.label }}
+              </button>
+            }
+          }
+        </div>
+      </mat-card-actions>
+    }
+  </mat-card>
+}

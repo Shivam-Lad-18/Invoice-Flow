@@ -1,0 +1,149 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Welcome back, {{ auth.user()?.email }}</p>
+  </div>
+  <a mat-raised-button color="primary" routerLink="/invoices/upload">
+    <mat-icon>upload_file</mat-icon>
+    Upload Invoice
+  </a>
+</div>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" class="page-loader"></mat-progress-bar>
+}
+
+<!-- ── Stats Grid ──────────────────────────────────────────────────────────── -->
+@if (stats(); as s) {
+  <div class="stats-grid">
+
+    <mat-card class="stat-card stat-total">
+      <mat-card-content>
+        <div class="stat-row">
+          <div>
+            <div class="stat-value">{{ s.total }}</div>
+            <div class="stat-label">Total Invoices</div>
+          </div>
+          <mat-icon class="stat-icon">description</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card stat-pending">
+      <mat-card-content>
+        <div class="stat-row">
+          <div>
+            <div class="stat-value">{{ pendingCount() }}</div>
+            <div class="stat-label">Pending Review</div>
+            <div class="stat-sub">Extracted + In Approval</div>
+          </div>
+          <mat-icon class="stat-icon">pending_actions</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card stat-approved">
+      <mat-card-content>
+        <div class="stat-row">
+          <div>
+            <div class="stat-value">{{ s.approved }}</div>
+            <div class="stat-label">Approved</div>
+            <div class="stat-sub">{{ s.approvedTotalValue | number:'1.0-0' }} total value</div>
+          </div>
+          <mat-icon class="stat-icon">check_circle</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card stat-rejected">
+      <mat-card-content>
+        <div class="stat-row">
+          <div>
+            <div class="stat-value">{{ s.rejected }}</div>
+            <div class="stat-label">Rejected</div>
+          </div>
+          <mat-icon class="stat-icon">cancel</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+
+  <!-- ── Status breakdown ───────────────────────────────────────────────── -->
+  <div class="breakdown-row">
+    @for (item of [
+      { label: 'Uploaded', value: s.uploaded, cls: 'blue' },
+      { label: 'Extracting', value: s.extracting, cls: 'purple' },
+      { label: 'Extracted', value: s.extracted, cls: 'orange' },
+      { label: 'Pending Approval', value: s.pendingApproval, cls: 'amber' },
+      { label: 'In Approval', value: s.inApproval, cls: 'deep-orange' }
+    ]; track item.label) {
+      <div class="breakdown-chip chip--{{ item.cls }}">
+        <span class="chip-count">{{ item.value }}</span>
+        <span class="chip-label">{{ item.label }}</span>
+      </div>
+    }
+  </div>
+}
+
+<!-- ── Recent Invoices ────────────────────────────────────────────────────── -->
+<mat-card class="recent-card">
+  <mat-card-header>
+    <mat-card-title>Recent Invoices</mat-card-title>
+    <span class="spacer"></span>
+    <a mat-stroked-button routerLink="/invoices">View All</a>
+  </mat-card-header>
+
+  <mat-card-content>
+    @if (recentInvoices().length === 0 && !loading()) {
+      <div class="empty-state">
+        <mat-icon>inbox</mat-icon>
+        <p>No invoices yet. Upload your first invoice to get started.</p>
+      </div>
+    } @else {
+      <table mat-table [dataSource]="recentInvoices()" class="w-full">
+        <!-- File -->
+        <ng-container matColumnDef="file">
+          <th mat-header-cell *matHeaderCellDef>File</th>
+          <td mat-cell *matCellDef="let row">
+            <a [routerLink]="['/invoices', row.id]" class="file-link">
+              {{ row.originalFileName }}
+            </a>
+          </td>
+        </ng-container>
+        <!-- Vendor -->
+        <ng-container matColumnDef="vendor">
+          <th mat-header-cell *matHeaderCellDef>Vendor</th>
+          <td mat-cell *matCellDef="let row">{{ row.vendorName ?? '—' }}</td>
+        </ng-container>
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let row">
+            <app-status-badge [value]="row.status" type="invoice"></app-status-badge>
+          </td>
+        </ng-container>
+        <!-- Amount -->
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef>Amount</th>
+          <td mat-cell *matCellDef="let row">
+            @if (row.totalAmount != null) {
+              <span class="amount-cell">
+                <span class="currency-code">{{ row.currency ?? '' }}</span>
+                {{ row.totalAmount | number:'1.2-2' }}
+              </span>
+            } @else { — }
+          </td>
+        </ng-container>
+        <!-- Date -->
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Uploaded</th>
+          <td mat-cell *matCellDef="let row">{{ row.uploadedAt | date:'dd MMM yyyy' }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="recentCols"></tr>
+        <tr mat-row *matRowDef="let row; columns: recentCols;" class="table-row"></tr>
+      </table>
+    }
+  </mat-card-content>
+</mat-card>

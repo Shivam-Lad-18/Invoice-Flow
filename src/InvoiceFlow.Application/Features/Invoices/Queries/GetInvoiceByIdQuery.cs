@@ -2,6 +2,7 @@ using InvoiceFlow.Application.Common.Interfaces;
 using InvoiceFlow.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace InvoiceFlow.Application.Features.Invoices.Queries;
 
@@ -36,7 +37,17 @@ public sealed record ExtractionResultDto(
     string? Currency,
     bool HasLowConfidenceFields,
     bool IsManuallyCorrected,
-    DateTime ExtractedAt);
+    DateTime ExtractedAt,
+    IReadOnlyDictionary<string, float> ConfidenceScores,
+    IReadOnlyList<LineItemDto> LineItems);
+
+public sealed record LineItemDto(
+    Guid Id,
+    string? Description,
+    decimal? Quantity,
+    decimal? UnitPrice,
+    decimal? Amount,
+    decimal Confidence);
 
 public sealed record ApprovalWorkflowDto(
     Guid Id,
@@ -66,6 +77,7 @@ internal sealed class GetInvoiceByIdQueryHandler(
         var invoice = await db.Invoices
             .Include(i => i.Vendor)
             .Include(i => i.ExtractionResult)
+                .ThenInclude(er => er!.LineItems)
             .Include(i => i.ApprovalWorkflow)
                 .ThenInclude(w => w!.Steps)
             .AsNoTracking()
@@ -78,11 +90,26 @@ internal sealed class GetInvoiceByIdQueryHandler(
             && invoice.UploadedByUserId != currentUser.UserId)
             return null;
 
-        var extractionDto = invoice.ExtractionResult is { } er
-            ? new ExtractionResultDto(er.Id, er.VendorName, er.InvoiceNumber, er.InvoiceDate,
+        ExtractionResultDto? extractionDto = null;
+        if (invoice.ExtractionResult is { } er)
+        {
+            var confidences = string.IsNullOrEmpty(er.ConfidenceScores)
+                ? new Dictionary<string, float>()
+                : JsonSerializer.Deserialize<Dictionary<string, float>>(er.ConfidenceScores)
+                  ?? new Dictionary<string, float>();
+
+            var lineItems = er.LineItems
+                .OrderBy(li => li.CreatedAt)
+                .Select(li => new LineItemDto(
+                    li.Id, li.Description, li.Quantity, li.UnitPrice, li.Amount, li.Confidence))
+                .ToList();
+
+            extractionDto = new ExtractionResultDto(
+                er.Id, er.VendorName, er.InvoiceNumber, er.InvoiceDate,
                 er.DueDate, er.TotalAmount, er.SubTotal, er.TaxAmount, er.Currency,
-                er.HasLowConfidenceFields, er.IsManuallyCorrected, er.ExtractedAt)
-            : null;
+                er.HasLowConfidenceFields, er.IsManuallyCorrected, er.ExtractedAt,
+                confidences, lineItems);
+        }
 
         var workflowDto = invoice.ApprovalWorkflow is { } wf
             ? new ApprovalWorkflowDto(

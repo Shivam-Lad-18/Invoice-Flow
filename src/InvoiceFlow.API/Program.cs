@@ -1,3 +1,5 @@
+using Azure.Identity;
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using InvoiceFlow.Application;
 using InvoiceFlow.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -6,6 +8,20 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Key Vault (production only — dev uses appsettings.Development.json) ───────
+if (!builder.Environment.IsDevelopment())
+{
+    var keyVaultUrl = builder.Configuration["Azure:KeyVault:Url"]
+        ?? throw new InvalidOperationException("Azure:KeyVault:Url is not configured.");
+
+    // Uses the App Service Managed Identity automatically in Azure.
+    // Locally you can run `az login` and it will use your Azure CLI credentials.
+    builder.Configuration.AddAzureKeyVault(
+        new Uri(keyVaultUrl),
+        new DefaultAzureCredential(),
+        new KeyVaultSecretManager());
+}
 
 // ── Layer registrations ──────────────────────────────────────────────────────
 builder.Services.AddApplication();
@@ -104,7 +120,7 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 // ── Dev seed ─────────────────────────────────────────────────────────────────
-if (app.Environment.IsDevelopment())
-    await DevDataSeeder.SeedAsync(app.Services);
+// if (app.Environment.IsDevelopment())
+//     await DevDataSeeder.SeedAsync(app.Services);
 
 app.Run();

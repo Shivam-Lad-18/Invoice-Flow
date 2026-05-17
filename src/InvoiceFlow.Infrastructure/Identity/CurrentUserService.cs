@@ -17,6 +17,10 @@ public sealed class CurrentUserService(IHttpContextAccessor httpContextAccessor)
 
     public string? Email => User?.FindFirstValue(ClaimTypes.Email);
     public string? Role => User?.FindFirstValue(ClaimTypes.Role);
+
+    public Guid? VendorId => Guid.TryParse(
+        User?.FindFirstValue("vendor_id"), out var vid) ? vid : null;
+
     public string? IpAddress => httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
     public bool IsAuthenticated => User?.Identity?.IsAuthenticated ?? false;
 }

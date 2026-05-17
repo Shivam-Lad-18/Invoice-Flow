@@ -13,7 +13,8 @@ public sealed record AuthResponse(
     DateTime AccessTokenExpiry,
     Guid UserId,
     string Email,
-    string Role);
+    string Role,
+    Guid? VendorId);
 
 internal sealed class LoginCommandHandler(
     IIdentityService identityService,
@@ -43,6 +44,7 @@ internal sealed class LoginCommandHandler(
             AccessTokenExpiry: DateTime.UtcNow.AddMinutes(480),
             UserId: user.UserId,
             Email: user.Email,
-            Role: user.Role.ToString());
+            Role: user.Role.ToString(),
+            VendorId: user.VendorId);
     }
 }

@@ -90,7 +90,7 @@ internal sealed class SubmitForApprovalCommandHandler(
 // Approves the current workflow step. If it is the last step, transitions to Approved.
 // ══════════════════════════════════════════════════════════════════════════════
 
-public sealed record ApproveInvoiceCommand(Guid InvoiceId, Guid ApproverId, string? Comment)
+public sealed record ApproveInvoiceCommand(Guid InvoiceId, Guid ApproverId, string? Comment, string ApproverRole)
     : IRequest<ApproveInvoiceResponse>;
 
 public sealed record ApproveInvoiceResponse(
@@ -177,7 +177,7 @@ internal sealed class ApproveInvoiceCommandHandler(
 // Rejects at the current step and transitions invoice to Rejected.
 // ══════════════════════════════════════════════════════════════════════════════
 
-public sealed record RejectInvoiceCommand(Guid InvoiceId, Guid RejecterId, string Reason)
+public sealed record RejectInvoiceCommand(Guid InvoiceId, Guid RejecterId, string Reason, string RejecterRole)
     : IRequest<RejectInvoiceResponse>;
 
 public sealed record RejectInvoiceResponse(Guid InvoiceId, InvoiceStatus Status);
@@ -207,16 +207,18 @@ internal sealed class RejectInvoiceCommandHandler(
             throw new InvalidOperationException(
                 $"Invoice cannot be rejected in its current status: {invoice.Status}");
 
-        // Reject the current pending step
-        var pendingStep = invoice.ApprovalWorkflow?.Steps
-            .OrderBy(s => s.StepNumber)
-            .FirstOrDefault(s => s.Status == ApprovalStepStatus.Pending);
+        // Parallel approval: each user can only reject their own role's pending step.
+        if (!Enum.TryParse<UserRole>(request.RejecterRole, out var rejecterRole))
+            throw new InvalidOperationException($"Unrecognized role: {request.RejecterRole}");
 
-        if (pendingStep is not null)
-        {
-            var stepService = new ApprovalStepDomainService();
-            stepService.Reject(pendingStep, request.Reason);
-        }
+        var pendingStep = invoice.ApprovalWorkflow?.Steps
+            .FirstOrDefault(s => s.RequiredRole == rejecterRole && s.Status == ApprovalStepStatus.Pending);
+
+        if (pendingStep is null)
+            throw new InvalidOperationException("Your role does not have a pending approval step for this invoice.");
+
+        var stepService = new ApprovalStepDomainService();
+        stepService.Reject(pendingStep, request.Reason);
 
         // Transition invoice to Rejected
         var invoiceService = new InvoiceDomainService();

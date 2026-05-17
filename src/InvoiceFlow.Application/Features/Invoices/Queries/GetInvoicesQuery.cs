@@ -31,7 +31,8 @@ public sealed record InvoiceListItemDto(
     Guid VendorId,
     string? VendorName,
     DateTime UploadedAt,
-    decimal? TotalAmount);
+    decimal? TotalAmount,
+    string? Currency);
 
 // ── Handler ───────────────────────────────────────────────────────────────────
 
@@ -77,7 +78,8 @@ internal sealed class GetInvoicesQueryHandler(
                 i.VendorId,
                 i.Vendor != null ? i.Vendor.Name : null,
                 i.UploadedAt,
-                i.ExtractionResult != null ? i.ExtractionResult.TotalAmount : null))
+                i.ExtractionResult != null ? i.ExtractionResult.TotalAmount : null,
+                i.ExtractionResult != null ? i.ExtractionResult.Currency : null))
             .ToListAsync(ct);
 
         return new GetInvoicesResponse(items, totalCount, request.Page, request.PageSize);

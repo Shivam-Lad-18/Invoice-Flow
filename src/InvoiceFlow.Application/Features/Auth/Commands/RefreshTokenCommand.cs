@@ -42,6 +42,7 @@ internal sealed class RefreshTokenCommandHandler(
             AccessTokenExpiry: DateTime.UtcNow.AddMinutes(480),
             UserId: user.UserId,
             Email: user.Email,
-            Role: user.Role.ToString());
+            Role: user.Role.ToString(),
+            VendorId: user.VendorId);
     }
 }

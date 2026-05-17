@@ -1,3 +1,4 @@
+using InvoiceFlow.Application.Common.Interfaces;
 using InvoiceFlow.Application.Features.Invoices.Commands;
 using InvoiceFlow.Application.Features.Invoices.Queries;
 using InvoiceFlow.Domain.Enums;
@@ -10,7 +11,7 @@ namespace InvoiceFlow.API.Controllers;
 [ApiController]
 [Route("api/invoices")]
 [Authorize]
-public sealed class InvoicesController(IMediator mediator) : ControllerBase
+public sealed class InvoicesController(IMediator mediator, ICurrentUserService currentUser) : ControllerBase
 {
     private static readonly string[] AllowedExtensions = [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".tif"];
     private const long MaxFileSizeBytes = 20 * 1024 * 1024; // 20 MB
@@ -42,11 +43,21 @@ public sealed class InvoicesController(IMediator mediator) : ControllerBase
         if (uploadedByUserId == Guid.Empty)
             return Unauthorized();
 
+        // Security: Vendor-role users can only upload for their own linked vendor.
+        // Override whatever vendorId was sent in the form with the one from their JWT claim.
+        var effectiveVendorId = request.VendorId;
+        if (currentUser.Role == nameof(UserRole.Vendor))
+        {
+            if (!currentUser.VendorId.HasValue)
+                return BadRequest(new { message = "Your account is not linked to a vendor. Contact your administrator." });
+            effectiveVendorId = currentUser.VendorId.Value;
+        }
+
         try
         {
             await using var stream = request.File.OpenReadStream();
             var response = await mediator.Send(new UploadInvoiceCommand(
-                VendorId: request.VendorId,
+                VendorId: effectiveVendorId,
                 FileStream: stream,
                 OriginalFileName: request.File.FileName,
                 ContentType: request.File.ContentType,
@@ -158,7 +169,7 @@ public sealed class InvoicesController(IMediator mediator) : ControllerBase
     /// If this is the last step, the invoice is marked Approved.
     /// </summary>
     [HttpPost("{id:guid}/approve")]
-    [Authorize(Roles = "Manager,FinanceHead,Admin")]
+    [Authorize(Roles = "Manager,FinanceHead,CFO,Admin")]
     [ProducesResponseType(typeof(ApproveInvoiceResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Approve(Guid id, [FromBody] ApproveRequest request, CancellationToken ct)
@@ -168,7 +179,7 @@ public sealed class InvoicesController(IMediator mediator) : ControllerBase
 
         try
         {
-            var result = await mediator.Send(new ApproveInvoiceCommand(id, userId, request.Comment), ct);
+            var result = await mediator.Send(new ApproveInvoiceCommand(id, userId, request.Comment, currentUser.Role!), ct);
             return Ok(result);
         }
         catch (InvalidOperationException ex)
@@ -181,7 +192,7 @@ public sealed class InvoicesController(IMediator mediator) : ControllerBase
     /// Rejects the invoice at the current approval step. Requires a non-empty reason.
     /// </summary>
     [HttpPost("{id:guid}/reject")]
-    [Authorize(Roles = "Manager,FinanceHead,Admin")]
+    [Authorize(Roles = "Manager,FinanceHead,CFO,Admin")]
     [ProducesResponseType(typeof(RejectInvoiceResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Reject(Guid id, [FromBody] RejectRequest request, CancellationToken ct)
@@ -194,7 +205,7 @@ public sealed class InvoicesController(IMediator mediator) : ControllerBase
 
         try
         {
-            var result = await mediator.Send(new RejectInvoiceCommand(id, userId, request.Reason), ct);
+            var result = await mediator.Send(new RejectInvoiceCommand(id, userId, request.Reason, currentUser.Role!), ct);
             return Ok(result);
         }
         catch (InvalidOperationException ex)

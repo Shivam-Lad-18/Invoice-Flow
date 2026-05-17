@@ -40,6 +40,9 @@ public sealed class JwtTokenService(IConfiguration configuration) : IJwtTokenSer
         if (user.FullName is not null)
             claims.Add(new Claim("full_name", user.FullName));
 
+        if (user.VendorId.HasValue)
+            claims.Add(new Claim("vendor_id", user.VendorId.Value.ToString()));
+
         var token = new JwtSecurityToken(
             issuer: _issuer,
             audience: _audience,

@@ -1,0 +1,19 @@
+  Determining projects to restore...
+C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.Infrastructure\InvoiceFlow.Infrastructure.csproj : warning NU1510: PackageReference Microsoft.Extensions.Configuration.Abstractions will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.API\InvoiceFlow.API.csproj]
+  All projects are up-to-date for restore.
+C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.Infrastructure\InvoiceFlow.Infrastructure.csproj : warning NU1510: PackageReference Microsoft.Extensions.Configuration.Abstractions will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+  InvoiceFlow.Domain -> C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.Domain\bin\Debug\net10.0\InvoiceFlow.Domain.dll
+C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.Application\Features\Invoices\Commands\InvoiceWorkflowCommands.cs(29,25): warning CS9113: Parameter 'currentUser' is unread. [C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.Application\InvoiceFlow.Application.csproj]
+  InvoiceFlow.Application -> C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.Application\bin\Debug\net10.0\InvoiceFlow.Application.dll
+  InvoiceFlow.Infrastructure -> C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.Infrastructure\bin\Debug\net10.0\InvoiceFlow.Infrastructure.dll
+  InvoiceFlow.API -> C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.API\bin\Debug\net10.0\InvoiceFlow.API.dll
+
+Build succeeded.
+
+C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.Infrastructure\InvoiceFlow.Infrastructure.csproj : warning NU1510: PackageReference Microsoft.Extensions.Configuration.Abstractions will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.API\InvoiceFlow.API.csproj]
+C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.Infrastructure\InvoiceFlow.Infrastructure.csproj : warning NU1510: PackageReference Microsoft.Extensions.Configuration.Abstractions will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.Application\Features\Invoices\Commands\InvoiceWorkflowCommands.cs(29,25): warning CS9113: Parameter 'currentUser' is unread. [C:\Users\shivam\DotNetDemo\GitHub_copilot_demo\src\InvoiceFlow.Application\InvoiceFlow.Application.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.16

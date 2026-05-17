@@ -23,7 +23,9 @@ public sealed record InvoiceDetailDto(
     DateTime UploadedAt,
     string? DuplicateCheckHash,
     ExtractionResultDto? ExtractionResult,
-    ApprovalWorkflowDto? ApprovalWorkflow);
+    ApprovalWorkflowDto? ApprovalWorkflow,
+    Guid? DuplicateOfInvoiceId,
+    string? DuplicateOfFileName);
 
 public sealed record ExtractionResultDto(
     Guid Id,
@@ -121,10 +123,26 @@ internal sealed class GetInvoiceByIdQueryHandler(
                     .ToList())
             : null;
 
+        // Duplicate detection: find another invoice (not this one) with the same hash
+        Guid? duplicateId = null;
+        string? duplicateFileName = null;
+        if (!string.IsNullOrEmpty(invoice.DuplicateCheckHash))
+        {
+            var dup = await db.Invoices
+                .Where(i => i.DuplicateCheckHash == invoice.DuplicateCheckHash && i.Id != invoice.Id)
+                .Select(i => new { i.Id, i.OriginalFileName })
+                .FirstOrDefaultAsync(ct);
+            if (dup is not null)
+            {
+                duplicateId = dup.Id;
+                duplicateFileName = dup.OriginalFileName;
+            }
+        }
+
         return new InvoiceDetailDto(
             invoice.Id, invoice.OriginalFileName, invoice.BlobPath, invoice.FileSizeBytes,
             invoice.Status, invoice.VendorId, invoice.Vendor?.Name,
             invoice.UploadedAt, invoice.DuplicateCheckHash,
-            extractionDto, workflowDto);
+            extractionDto, workflowDto, duplicateId, duplicateFileName);
     }
 }
